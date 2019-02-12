@@ -339,7 +339,10 @@ $(document).ready(function(){
         if(tot_consumed>0){
             $('#tot_units_consumed').val(tot_consumed);
             $('#tot_units_consumed_txt').text(tot_consumed);
-            tarrif_calculation($('#total_tarrif_id').val(),$('#tarrif_days').val(),$('#tot_units_consumed').val());
+            var calcd_tot = tarrif_calculation_frontend($('#total_tarrif_id').val(),$('#tarrif_days').val(),$('#tot_units_consumed').val());
+            
+            $("#tot_calculated_amount").val(calcd_tot);
+            $("#tot_calculated_amount_txt").text(parseFloat(calcd_tot).toFixed(2));
         }
         
     });
