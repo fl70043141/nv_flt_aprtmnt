@@ -88,7 +88,7 @@ class Water_bill_tarrif extends CI_Controller {
             $this->form_validation->set_error_delimiters('<p style="color:rgb(255, 115, 115);" class="help-block"><i class="glyphicon glyphicon-exclamation-sign"></i> ','</p>');
 
 //            $this->form_validation->set_rules('resident_name','Resident  Name','required|min_length[2]');
-            $this->form_validation->set_rules('tarrif_days','Mumber of Days Days ','required|min_length[2]'); 
+            $this->form_validation->set_rules('tarrif_days','Mumber of Days Days ','required|min_length[1]'); 
 //            $this->form_validation->set_rules('address','Address','required'); 
       }	
                     

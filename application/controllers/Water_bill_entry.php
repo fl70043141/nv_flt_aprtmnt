@@ -264,6 +264,7 @@ class Water_bill_entry extends CI_Controller {
             }
             $data['apartment_list'] = get_dropdown_data(APARTMENTS, 'apartment_name', 'id');
             $data['tarrif_list'] = get_dropdown_data(TARRIF_WATERBILL, 'tarrif_name', 'id');
+            $data['tarrif_data'] = $this->get_wb_tarrifs_all();
 //            echo '<pre>';            print_r($data); die;
             return $data;	
 	}	
@@ -370,7 +371,20 @@ class Water_bill_entry extends CI_Controller {
         function get_dropdown_formodal($table='WATERBILL_ENTRY',$name='apartment_name',$id="id"){ 
              echo json_encode(get_dropdown_data(WATERBILL_ENTRY, $name, $id)); 
         }
-             
+        
+        function get_wb_tarrifs_all(){
+            $this->load->model('Water_bill_tarrif_model');
+            $calculation_tarrif =  $this->Water_bill_tarrif_model->search_result(); 
+            
+            $tarrif_data = array();
+            foreach ($calculation_tarrif as $tarrif){
+                $tarrif_data[$tarrif['id']] = $tarrif;
+                $tarrif_data[$tarrif['id']]['rows'] = $this->Water_bill_tarrif_model->get_tarrif_rows($tarrif['id']); 
+            }  
+            return json_encode($tarrif_data);
+            
+        }
+                
         function test(){
             echo '<pre>';            print_r($this->router->class); die;
 //            $this->load->model('Water_bill_entry_model');

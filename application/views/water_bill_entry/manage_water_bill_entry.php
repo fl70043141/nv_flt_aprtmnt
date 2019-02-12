@@ -211,7 +211,7 @@ endswitch;
                                             </div>
                                         </div>
                                     </div>
-                            <div id="search_result_1"></div>
+                            <div id="search_result_1">aaaa</div>
                                     <div class="col-md-12">
                                        <h4>Residents Bill Entry</h4>
                                          <hr>  
@@ -241,6 +241,7 @@ endswitch;
                                     </div>
                                         
                         </div>
+                        <input hidden id="inpt_tarrif_data" name="inpt_tarrif_data" value='<?php echo $tarrif_data;?>'>
                     </div>
                           <!-- /.box-body -->
 
@@ -402,19 +403,28 @@ function load_residents(){
                                             if(tot_consumed>0){
                                                 $('#'+rowId+'_consumed_units').val(tot_consumed);
 //                                                $('#tot_units_consumed_txt').text(tot_consumed);
-                                                $.ajax({
-                                                        url: "<?php echo site_url($this->router->class.'/fl_ajax');?>",
-                                                        type: 'post',
-                                                        data : {function_name:'calculate_tarrif',tarrif_id:$('#water_bill_tarrif_id').val(), tarrif_days:$('#tarrif_days').val(),units:tot_consumed},
-                                                        success: function(result){
-                                                            if(!isNaN(result)){
-                                                                $('#'+rowId+'_bill_total').val(parseFloat(result).toFixed(2));
+
+
+                                               var calcd_amount = tarrif_calculation_frontend($('#water_bill_tarrif_id').val(),$('#tarrif_days').val(),tot_consumed);
+                                                
+                                                $('#'+rowId+'_bill_total').val(parseFloat(calcd_amount).toFixed(2));
+                                                
                                                                 
                                             calc_total_row();
-//                                                                $("#tot_calculated_amount_txt").text(parseFloat(result).toFixed(2));
-                                                            } 
-                                                        }
-                                                });
+//                                                return false;
+//                                                $.ajax({
+//                                                        url: "<?php echo site_url($this->router->class.'/fl_ajax');?>",
+//                                                        type: 'post',
+//                                                        data : {function_name:'calculate_tarrif',tarrif_id:$('#water_bill_tarrif_id').val(), tarrif_days:$('#tarrif_days').val(),units:tot_consumed},
+//                                                        success: function(result){
+//                                                            if(!isNaN(result)){
+//                                                                $('#'+rowId+'_bill_total').val(parseFloat(result).toFixed(2));
+//                                                                
+//                                            calc_total_row();
+////                                                                $("#tot_calculated_amount_txt").text(parseFloat(result).toFixed(2));
+//                                                            } 
+//                                                        }
+//                                                });
                                                 
                                             }
                                             
@@ -463,5 +473,61 @@ function calc_total_row(){
         $('#row_total_bill_amount').text(tot_amount.toFixed(2));
         $('#row_total_units').text(tot_consumed.toFixed(2));
 //        alert('Consumed units: '+tot_consumed+' | Amount Bill : '+tot_amount);
+}
+
+function tarrif_calculation_frontend(tarrif_id, days, units){
+    
+    var tr_json = $('#inpt_tarrif_data').val();
+//    $('#search_result_1').html(tr_json);
+    var res1 = JSON.parse(tr_json);
+    var total_usage_charge = 0; var total_service_charges = 0; var total_charge =0; var vat_amount =  0;
+    var tmp_units = parseFloat(units);
+    var tarrif_days = (typeof(parseFloat(days)) == 'undefined')? 30:parseFloat(days); //defult 30 daus
+     var tarrif_row_last_id = '';
+     
+    if((res1[tarrif_id]['rows']).length>0){
+        
+             
+        $.each(res1[tarrif_id]['rows'],function(key,tarrif_row){
+            
+                    var prev_row_to = 0;
+                    var prev_key = key-1;
+                    if(typeof(res1[tarrif_id]['rows'][prev_key]) != 'undefined')
+                        prev_row_to = parseFloat(res1[tarrif_id]['rows'][prev_key]['units_to']);
+                    
+                    if(tmp_units>0){
+                        var unit_dif = (parseFloat(tarrif_row['units_to']) - prev_row_to)*(tarrif_days/parseFloat(res1[tarrif_id]['tarrif_days'])); //dif for days
+                        
+                        if(tmp_units > unit_dif && unit_dif>0 && (tarrif_row['units_to']!='0' ||  tarrif_row['units_to']!='-1')){
+                            total_usage_charge += unit_dif * parseFloat(tarrif_row['usage_charge']); 
+                        }else{
+                             total_usage_charge += tmp_units * parseFloat(tarrif_row['usage_charge']);
+                        }
+                            tarrif_row_last_id = key;
+                            tmp_units -= unit_dif;
+                    }
+                    
+                });
+                total_service_charges += parseFloat(res1[tarrif_id]['rows'][tarrif_row_last_id]['service_charge']) * (days/parseFloat(res1[tarrif_id]['tarrif_days']));
+                total_charge = total_service_charges + total_usage_charge;
+     }
+     
+                        
+            //vat calculation
+            if(typeof(res1[tarrif_id]['vat_val']) != 'undefined'){
+                if(res1[tarrif_id]['vat_calculation_method']=='1'){
+//                    $vat_amount = 0.12*$total_charge;
+                    var vat_amount = (parseFloat(res1[tarrif_id]['vat_val'])/100)*total_charge;
+//                    echo '<br>VAT ('.$calculation_tarrif[0]['vat_val'].')charge:'.$vat_amount;
+                    total_charge += vat_amount; 
+                }
+            }
+            return total_charge;
+//    $.each(res1,function(index,item){
+//        
+//        console.log(item); 
+//        $('#search_result_1').append(item.tarrif_name);
+//    }); 
+    
 }
 </script>
